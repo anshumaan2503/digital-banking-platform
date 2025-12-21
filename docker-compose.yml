@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: digital_banking
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: digital-banking-app
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    restart: unless-stopped
+
+
+volumes:
+  postgres_data:
