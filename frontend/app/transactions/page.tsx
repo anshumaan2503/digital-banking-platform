@@ -11,50 +11,73 @@ import { formatCurrency } from '@/lib/utils'
 import { ArrowUpRight, ArrowDownLeft, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>([])
+  // Mock transaction data
+  const mockTransactionsData: Transaction[] = [
+    {
+      id: '1',
+      type: 'CREDIT',
+      amount: 250000,
+      currency: 'INR',
+      description: 'Salary credit - January 2026',
+      timestamp: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      balance: 250000
+    },
+    {
+      id: '2',
+      type: 'DEBIT',
+      amount: 1200,
+      currency: 'INR',
+      description: 'Amazon - Electronics purchase',
+      timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+      balance: 248800
+    },
+    {
+      id: '3',
+      type: 'DEBIT',
+      amount: 450,
+      currency: 'INR',
+      description: 'Zomato - Food delivery',
+      timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+      balance: 248350
+    },
+    {
+      id: '4',
+      type: 'DEBIT',
+      amount: 850,
+      currency: 'INR',
+      description: 'Netflix subscription renewal',
+      timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      balance: 247500
+    },
+    {
+      id: '5',
+      type: 'DEBIT',
+      amount: 500,
+      currency: 'INR',
+      description: 'Google Play - App purchase',
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      balance: 247000
+    }
+  ]
+
+  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactionsData)
   const [pagination, setPagination] = useState({
     page: 0,
     size: 10,
     totalPages: 1,
-    totalElements: 0
+    totalElements: 5
   })
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
 
   useEffect(() => {
-    const loadTransactions = async () => {
-      try {
-        const accountNumber = localStorage.getItem('accountNumber')
-        const token = localStorage.getItem('authToken')
-        
-        if (!accountNumber || !token) {
-          router.push('/')
-          return
-        }
-
-        const response: TransactionResponse = await api.getTransactions(accountNumber, 0, 10)
-        
-        setTransactions(response.content)
-        setPagination({
-          page: response.number,
-          size: response.size,
-          totalPages: response.totalPages,
-          totalElements: response.totalElements
-        })
-      } catch (err: any) {
-        if (err.status === 401) {
-          router.push('/')
-        } else {
-          setError(err.message || 'Failed to load transactions')
-        }
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadTransactions()
-  }, [router])
+    // Simulate loading
+    setIsLoading(true)
+    setTimeout(() => {
+      setIsLoading(false)
+    }, 300)
+  }, [])
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 0 && newPage < pagination.totalPages) {

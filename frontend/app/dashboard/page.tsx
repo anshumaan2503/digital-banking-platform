@@ -5,48 +5,81 @@ import { useRouter } from 'next/navigation'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Disclaimer } from '@/components/ui/disclaimer'
 import { api, Account, Transaction } from '@/lib/api'
 import { formatCurrency, formatAccountNumber } from '@/lib/utils'
 import { Wallet, TrendingUp, ArrowUpRight, ArrowDownLeft, Loader2 } from 'lucide-react'
 
 export default function DashboardPage() {
-  const [account, setAccount] = useState<Account | null>(null)
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  // Mock data for demonstration
+  const mockAccount: Account = {
+    accountNumber: 'ACC001',
+    balance: 247500,
+    currency: 'INR',
+    accountType: 'SAVINGS'
+  }
+
+  const mockTransactions: Transaction[] = [
+    {
+      id: '1',
+      type: 'CREDIT',
+      amount: 250000,
+      currency: 'INR',
+      description: 'Salary credit - January 2026',
+      timestamp: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      balance: 250000
+    },
+    {
+      id: '2',
+      type: 'DEBIT',
+      amount: 1200,
+      currency: 'INR',
+      description: 'Amazon - Electronics purchase',
+      timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+      balance: 248800
+    },
+    {
+      id: '3',
+      type: 'DEBIT',
+      amount: 450,
+      currency: 'INR',
+      description: 'Zomato - Food delivery',
+      timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+      balance: 248350
+    },
+    {
+      id: '4',
+      type: 'DEBIT',
+      amount: 850,
+      currency: 'INR',
+      description: 'Netflix subscription renewal',
+      timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      balance: 247500
+    },
+    {
+      id: '5',
+      type: 'DEBIT',
+      amount: 500,
+      currency: 'INR',
+      description: 'Google Play - App purchase',
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      balance: 247000
+    }
+  ]
+
+  const [account, setAccount] = useState<Account | null>(mockAccount)
+  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
 
   useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        const accountNumber = localStorage.getItem('accountNumber')
-        const token = localStorage.getItem('authToken')
-        
-        if (!accountNumber || !token) {
-          router.push('/')
-          return
-        }
-
-        const [accountData, transactionsData] = await Promise.all([
-          api.getAccount(accountNumber),
-          api.getTransactions(accountNumber, 0, 5)
-        ])
-
-        setAccount(accountData)
-        setTransactions(transactionsData.content)
-      } catch (err: any) {
-        if (err.status === 401) {
-          router.push('/')
-        } else {
-          setError(err.message || 'Failed to load dashboard data')
-        }
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadDashboardData()
-  }, [router])
+    // Simulate loading delay
+    setIsLoading(true)
+    setTimeout(() => {
+      setIsLoading(false)
+    }, 500)
+  }, [])
 
   if (isLoading) {
     return (
@@ -71,6 +104,9 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Disclaimer */}
+        <Disclaimer />
+
         {/* Welcome Header */}
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
