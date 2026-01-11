@@ -21,86 +21,105 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
-        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-        public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-                this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        }
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
-        /* ================= PASSWORD ENCODER ================= */
+    /* ================= PASSWORD ENCODER ================= */
 
-        @Bean
-        public PasswordEncoder passwordEncoder() {
-                return new BCryptPasswordEncoder();
-        }
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-        /* ============== AUTHENTICATION MANAGER ============== */
+    /* ============== AUTHENTICATION MANAGER ============== */
 
-        @Bean
-        public AuthenticationManager authenticationManager(
-                        AuthenticationConfiguration configuration) throws Exception {
-                return configuration.getAuthenticationManager();
-        }
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
+    }
 
-        /* ===================== CORS ========================= */
+    /* ===================== CORS ========================= */
 
-        @Bean
-        public CorsConfigurationSource corsConfigurationSource() {
-                CorsConfiguration config = new CorsConfiguration();
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
 
-                config.setAllowedOrigins(List.of("http://localhost:3000"));
-                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                config.setAllowedHeaders(List.of("*"));
-                config.setAllowCredentials(true);
+        // ✅ Explicitly allow frontend origins
+        config.setAllowedOrigins(List.of(
+                "http://localhost:3000",
+                "https://digital-banking-platform.onrender.com"
+        ));
 
-                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-                source.registerCorsConfiguration("/**", config);
+        config.setAllowedMethods(List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
+        ));
 
-                return source;
-        }
+        config.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type"
+        ));
 
-        /* ================= SECURITY FILTER ================== */
+        config.setAllowCredentials(true);
 
-        @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http)
-                        throws Exception {
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
 
-                http
-                                // API → disable CSRF
-                                .csrf(csrf -> csrf.disable())
+        return source;
+    }
 
-                                // Enable CORS
-                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+    /* ================= SECURITY FILTER ================== */
 
-                                // JWT → stateless
-                                .sessionManagement(session -> session
-                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
 
-                                // 🔥 Force 401 for unauthenticated requests
-                                .exceptionHandling(ex -> ex
-                                                .authenticationEntryPoint(
-                                                                (request, response, authException) -> response
-                                                                                .sendError(
-                                                                                                HttpServletResponse.SC_UNAUTHORIZED,
-                                                                                                "Unauthorized")))
+        http
+                // Enable CORS FIRST
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                                // Authorization rules
-                                .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers(
-                                                                "/api/auth/**",
-                                                                "/error")
-                                                .permitAll()
-                                                .anyRequest().authenticated())
+                // Disable CSRF (JWT based API)
+                .csrf(csrf -> csrf.disable())
 
-                                // Disable default auth mechanisms
-                                .httpBasic(basic -> basic.disable())
-                                .formLogin(form -> form.disable())
+                // Stateless session
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                                // JWT filter
-                                .addFilterBefore(
-                                                jwtAuthenticationFilter,
-                                                UsernamePasswordAuthenticationFilter.class);
+                // Return 401 instead of redirect
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(
+                                (request, response, authException) ->
+                                        response.sendError(
+                                                HttpServletResponse.SC_UNAUTHORIZED,
+                                                "Unauthorized")))
 
-                return http.build();
-        }
+                // Authorization rules
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/auth/**",
+                                "/error"
+                        ).permitAll()
+                        .anyRequest().authenticated())
+
+                // Disable default auth
+                .httpBasic(basic -> basic.disable())
+                .formLogin(form -> form.disable())
+
+                // JWT filter
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
+
+        return http.build();
+    }
 }
