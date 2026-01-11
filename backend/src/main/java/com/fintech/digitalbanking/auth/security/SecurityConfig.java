@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -12,11 +13,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -42,40 +38,6 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-    /* ===================== CORS ========================= */
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-
-        // ✅ Explicitly allow frontend origins
-        config.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "https://digital-banking-platform.onrender.com"
-        ));
-
-        config.setAllowedMethods(List.of(
-                "GET",
-                "POST",
-                "PUT",
-                "DELETE",
-                "OPTIONS"
-        ));
-
-        config.setAllowedHeaders(List.of(
-                "Authorization",
-                "Content-Type"
-        ));
-
-        config.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-
-        return source;
-    }
-
     /* ================= SECURITY FILTER ================== */
 
     @Bean
@@ -83,17 +45,17 @@ public class SecurityConfig {
             throws Exception {
 
         http
-                // Enable CORS FIRST
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // ✅ Spring Security 6 compatible CORS (uses CorsConfig.java)
+                .cors(Customizer.withDefaults())
 
-                // Disable CSRF (JWT based API)
+                // Disable CSRF (JWT-based API)
                 .csrf(csrf -> csrf.disable())
 
                 // Stateless session
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // Return 401 instead of redirect
+                // Force 401 instead of redirect
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(
                                 (request, response, authException) ->
@@ -110,7 +72,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated())
 
-                // Disable default auth
+                // Disable default auth mechanisms
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable())
 
