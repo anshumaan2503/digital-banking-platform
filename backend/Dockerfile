@@ -1,17 +1,22 @@
-FROM eclipse-temurin:17-jdk-alpine
+# ---------- BUILD STAGE ----------
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
 COPY pom.xml .
-COPY mvnw .
-COPY .mvn .mvn
-
-RUN ./mvnw -B dependency:go-offline
+RUN mvn dependency:go-offline
 
 COPY src src
+RUN mvn clean package -DskipTests
 
-RUN ./mvnw -B clean package -DskipTests
+
+# ---------- RUN STAGE ----------
+FROM eclipse-temurin:17-jdk-alpine
+
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "target/digital-banking-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
