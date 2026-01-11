@@ -7,9 +7,10 @@ import com.fintech.digitalbanking.auth.dto.LoginRequest;
 import com.fintech.digitalbanking.auth.dto.LoginResponse;
 import com.fintech.digitalbanking.auth.jwt.JwtUtil;
 import com.fintech.digitalbanking.auth.repository.UserRepository;
-import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -20,44 +21,57 @@ import java.util.List;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-        private final AuthenticationManager authenticationManager;
-        private final JwtUtil jwtUtil;
-        private final UserRepository userRepository;
-        private final AccountRepository accountRepository;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
 
-        public AuthController(
-                        AuthenticationManager authenticationManager,
-                        JwtUtil jwtUtil,
-                        UserRepository userRepository,
-                        AccountRepository accountRepository) {
-                this.authenticationManager = authenticationManager;
-                this.jwtUtil = jwtUtil;
-                this.userRepository = userRepository;
-                this.accountRepository = accountRepository;
-        }
+    public AuthController(
+            AuthenticationManager authenticationManager,
+            JwtUtil jwtUtil,
+            UserRepository userRepository,
+            AccountRepository accountRepository) {
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
+        this.accountRepository = accountRepository;
+    }
 
-        @PostMapping("/login")
-        public ResponseEntity<LoginResponse> login(
-                        @RequestBody LoginRequest request) {
-                Authentication authentication = authenticationManager.authenticate(
-                                new UsernamePasswordAuthenticationToken(
-                                                request.getUsername(),
-                                                request.getPassword()));
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
 
-                String token = jwtUtil.generateToken(authentication.getName());
-                String username = authentication.getName();
+        try {
+            Authentication authentication =
+                    authenticationManager.authenticate(
+                            new UsernamePasswordAuthenticationToken(
+                                    request.getUsername(),
+                                    request.getPassword()
+                            )
+                    );
 
-                // Get user's account number
-                String accountNumber = "";
-                UserEntity user = userRepository.findByUsername(username).orElse(null);
-                if (user != null) {
-                        List<Account> accounts = accountRepository.findByUserId(user.getId());
-                        if (!accounts.isEmpty()) {
-                                accountNumber = accounts.get(0).getAccountNumber();
-                        }
+            String username = authentication.getName();
+            String token = jwtUtil.generateToken(username);
+
+            String accountNumber = "";
+            UserEntity user = userRepository.findByUsername(username).orElse(null);
+
+            if (user != null) {
+                List<Account> accounts =
+                        accountRepository.findByUserId(user.getId());
+                if (!accounts.isEmpty()) {
+                    accountNumber = accounts.get(0).getAccountNumber();
                 }
+            }
 
-                return ResponseEntity.ok(
-                                new LoginResponse(token, username, accountNumber));
+            return ResponseEntity.ok(
+                    new LoginResponse(token, username, accountNumber)
+            );
+
+        } catch (BadCredentialsException ex) {
+            // ✅ Correct behavior
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid username or password");
         }
+    }
 }
