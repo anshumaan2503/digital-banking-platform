@@ -30,11 +30,11 @@ export function SignInModal({ open, onOpenChange }: SignInModalProps) {
     try {
       // Call the real API
       const response = await api.login(email, password)
-      
+
       // Store real auth data from backend
       localStorage.setItem('authToken', response.token)
       localStorage.setItem('accountNumber', response.accountNumber)
-      
+
       // Close modal and redirect
       onOpenChange(false)
       router.push('/dashboard')
@@ -49,7 +49,7 @@ export function SignInModal({ open, onOpenChange }: SignInModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogClose onClose={() => onOpenChange(false)} />
-        
+
         <DialogHeader className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl mb-4 mx-auto">
             <CreditCard className="w-8 h-8 text-white" />
@@ -61,6 +61,14 @@ export function SignInModal({ open, onOpenChange }: SignInModalProps) {
             Access your digital banking dashboard
           </p>
         </DialogHeader>
+
+        {/* Backend Startup Disclaimer */}
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-lg flex items-start gap-2">
+          <Info className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-amber-800">
+            <span className="font-semibold text-amber-900">Note:</span> First login might take 40-60 seconds as the backend service initializes. Thank you for your patience.
+          </p>
+        </div>
 
         {/* Sign In Form */}
         <form onSubmit={handleSubmit} className="space-y-4 mb-6">
@@ -78,7 +86,7 @@ export function SignInModal({ open, onOpenChange }: SignInModalProps) {
               className="h-11"
             />
           </div>
-          
+
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium text-gray-700">
               Password
@@ -146,7 +154,7 @@ export function SignInModal({ open, onOpenChange }: SignInModalProps) {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-start space-x-2 text-xs text-gray-600">
               <Info className="w-4 h-4 mt-0.5 text-indigo-500 flex-shrink-0" />
               <p>Use these demo credentials to explore the application features.</p>
@@ -161,7 +169,7 @@ export function SignInModal({ open, onOpenChange }: SignInModalProps) {
             <div className="text-xs text-gray-600">
               <p className="font-medium mb-1">Important Notice</p>
               <p>
-                Sign-in credentials are provided by the bank for security purposes. 
+                Sign-in credentials are provided by the bank for security purposes.
                 Users cannot create accounts independently due to privacy and regulatory requirements.
               </p>
             </div>
