@@ -26,9 +26,9 @@ export default function TransferPage() {
       try {
         const accountNumber = localStorage.getItem('accountNumber')
         const token = localStorage.getItem('authToken')
-        
+
         if (!accountNumber || !token) {
-          router.push('/')
+          router.push('/login')
           return
         }
 
@@ -36,7 +36,7 @@ export default function TransferPage() {
         setAccount(accountData)
       } catch (err: any) {
         if (err.status === 401) {
-          router.push('/')
+          router.push('/login')
         } else {
           addToast({
             title: 'Error',
@@ -54,7 +54,7 @@ export default function TransferPage() {
 
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!account) return
 
     const transferAmount = parseFloat(amount)
@@ -286,7 +286,7 @@ export default function TransferPage() {
               <div className="text-sm text-amber-800">
                 <p className="font-medium mb-1">Security Notice</p>
                 <p>
-                  Please verify the recipient account number carefully before confirming the transfer. 
+                  Please verify the recipient account number carefully before confirming the transfer.
                   Transfers cannot be reversed once processed.
                 </p>
               </div>
