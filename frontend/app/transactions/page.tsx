@@ -11,73 +11,51 @@ import { formatCurrency } from '@/lib/utils'
 import { ArrowUpRight, ArrowDownLeft, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function TransactionsPage() {
-  // Mock transaction data
-  const mockTransactionsData: Transaction[] = [
-    {
-      id: '1',
-      type: 'CREDIT',
-      amount: 250000,
-      currency: 'INR',
-      description: 'Salary credit - January 2026',
-      timestamp: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      balance: 250000
-    },
-    {
-      id: '2',
-      type: 'DEBIT',
-      amount: 1200,
-      currency: 'INR',
-      description: 'Amazon - Electronics purchase',
-      timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-      balance: 248800
-    },
-    {
-      id: '3',
-      type: 'DEBIT',
-      amount: 450,
-      currency: 'INR',
-      description: 'Zomato - Food delivery',
-      timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-      balance: 248350
-    },
-    {
-      id: '4',
-      type: 'DEBIT',
-      amount: 850,
-      currency: 'INR',
-      description: 'Netflix subscription renewal',
-      timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      balance: 247500
-    },
-    {
-      id: '5',
-      type: 'DEBIT',
-      amount: 500,
-      currency: 'INR',
-      description: 'Google Play - App purchase',
-      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      balance: 247000
-    }
-  ]
-
-  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactionsData)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [pagination, setPagination] = useState({
     page: 0,
     size: 10,
     totalPages: 1,
-    totalElements: 5
+    totalElements: 0
   })
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const router = useRouter()
 
   useEffect(() => {
-    // Simulate loading
-    setIsLoading(true)
-    setTimeout(() => {
-      setIsLoading(false)
-    }, 300)
-  }, [])
+    const fetchTransactions = async () => {
+      try {
+        const accountNumber = localStorage.getItem('accountNumber')
+        const token = localStorage.getItem('authToken')
+
+        if (!accountNumber || !token) {
+          router.push('/login')
+          return
+        }
+
+        setIsLoading(true)
+        const response = await api.getTransactions(accountNumber, pagination.page, pagination.size)
+
+        setTransactions(response.content)
+        setPagination(prev => ({
+          ...prev,
+          totalPages: response.totalPages,
+          totalElements: response.totalElements
+        }))
+      } catch (err: any) {
+        console.error('Transactions fetch error:', err)
+        if (err.status === 401) {
+          router.push('/login')
+        } else {
+          setError('Failed to load transaction history. Please try again.')
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchTransactions()
+  }, [router, pagination.page, pagination.size])
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 0 && newPage < pagination.totalPages) {
@@ -132,19 +110,17 @@ export default function TransactionsPage() {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {transactions.map((transaction, index) => (
-                        <tr 
-                          key={transaction.id} 
-                          className={`hover:bg-gray-50 transition-colors ${
-                            index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                          }`}
+                        <tr
+                          key={transaction.id}
+                          className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                            }`}
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-2">
-                              <div className={`p-2 rounded-full ${
-                                transaction.type === 'CREDIT' 
-                                  ? 'bg-emerald-100 text-emerald-600' 
+                              <div className={`p-2 rounded-full ${transaction.type === 'CREDIT'
+                                  ? 'bg-emerald-100 text-emerald-600'
                                   : 'bg-rose-100 text-rose-600'
-                              }`}>
+                                }`}>
                                 {transaction.type === 'CREDIT' ? (
                                   <ArrowDownLeft className="h-4 w-4" />
                                 ) : (
@@ -160,9 +136,8 @@ export default function TransactionsPage() {
                             <p className="font-medium text-gray-900">{transaction.description}</p>
                           </td>
                           <td className="px-6 py-4">
-                            <p className={`font-semibold ${
-                              transaction.type === 'CREDIT' ? 'text-emerald-600' : 'text-rose-600'
-                            }`}>
+                            <p className={`font-semibold ${transaction.type === 'CREDIT' ? 'text-emerald-600' : 'text-rose-600'
+                              }`}>
                               {transaction.type === 'CREDIT' ? '+' : '-'}
                               {formatCurrency(transaction.amount, transaction.currency)}
                             </p>
@@ -195,11 +170,10 @@ export default function TransactionsPage() {
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-2">
-                          <div className={`p-2 rounded-full ${
-                            transaction.type === 'CREDIT' 
-                              ? 'bg-emerald-100 text-emerald-600' 
+                          <div className={`p-2 rounded-full ${transaction.type === 'CREDIT'
+                              ? 'bg-emerald-100 text-emerald-600'
                               : 'bg-rose-100 text-rose-600'
-                          }`}>
+                            }`}>
                             {transaction.type === 'CREDIT' ? (
                               <ArrowDownLeft className="h-4 w-4" />
                             ) : (
@@ -210,9 +184,8 @@ export default function TransactionsPage() {
                             {transaction.type}
                           </Badge>
                         </div>
-                        <p className={`font-semibold ${
-                          transaction.type === 'CREDIT' ? 'text-emerald-600' : 'text-rose-600'
-                        }`}>
+                        <p className={`font-semibold ${transaction.type === 'CREDIT' ? 'text-emerald-600' : 'text-rose-600'
+                          }`}>
                           {transaction.type === 'CREDIT' ? '+' : '-'}
                           {formatCurrency(transaction.amount, transaction.currency)}
                         </p>
