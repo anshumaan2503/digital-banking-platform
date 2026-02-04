@@ -44,7 +44,7 @@ VALUES (
     now()
 );
 
--- Insert a welcome transaction
+-- Insert a welcome transaction (Matching V3/V4 schema)
 INSERT INTO transactions (
     id,
     account_number,
@@ -52,7 +52,8 @@ INSERT INTO transactions (
     currency,
     type,
     description,
-    balance,
+    timestamp,
+    reference_id,
     created_at
 )
 VALUES (
@@ -62,6 +63,7 @@ VALUES (
     'INR',
     'CREDIT',
     'Initial deposit for demo account',
-    247500.00,
+    now(),
+    'REF-WELCOME-' || gen_random_uuid(),
     now()
 );
