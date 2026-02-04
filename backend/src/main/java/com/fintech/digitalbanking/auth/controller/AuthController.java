@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping({ "/api/auth", "/auth" })
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -41,13 +41,10 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
 
         try {
-            Authentication authentication =
-                    authenticationManager.authenticate(
-                            new UsernamePasswordAuthenticationToken(
-                                    request.getUsername(),
-                                    request.getPassword()
-                            )
-                    );
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getUsername(),
+                            request.getPassword()));
 
             String username = authentication.getName();
             String token = jwtUtil.generateToken(username);
@@ -56,22 +53,25 @@ public class AuthController {
             UserEntity user = userRepository.findByUsername(username).orElse(null);
 
             if (user != null) {
-                List<Account> accounts =
-                        accountRepository.findByUserId(user.getId());
+                List<Account> accounts = accountRepository.findByUserId(user.getId());
                 if (!accounts.isEmpty()) {
                     accountNumber = accounts.get(0).getAccountNumber();
                 }
             }
 
             return ResponseEntity.ok(
-                    new LoginResponse(token, username, accountNumber)
-            );
+                    new LoginResponse(token, username, accountNumber));
 
         } catch (BadCredentialsException ex) {
-            // ✅ Correct behavior
+            // ✅ Correct behavior for invalid credentials
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body("Invalid username or password");
+        } catch (Exception ex) {
+            // 🔥 Catch all other errors (like DB connection issues)
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Login failed due to an internal server error: " + ex.getMessage());
         }
     }
 }

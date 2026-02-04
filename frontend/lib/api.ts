@@ -45,7 +45,7 @@ async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = localStorage.getItem('authToken')
-  
+
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
@@ -55,7 +55,7 @@ async function apiRequest<T>(
     ...options,
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, config)
+  const response = await fetch(`${API_BASE_URL}/api${endpoint}`, config)
 
   if (!response.ok) {
     const errorText = await response.text()
