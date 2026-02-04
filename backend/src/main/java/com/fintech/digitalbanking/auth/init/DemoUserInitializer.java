@@ -16,10 +16,10 @@ public class DemoUserInitializer {
     @PostConstruct
     public void init() {
         try {
-            userService.createUser("demo", "demo@123");
-            System.out.println("✅ Demo user created");
-        } catch (IllegalArgumentException ex) {
-            System.out.println("ℹ️ Demo user already exists");
+            userService.setupDemoUser("demo", "demo@123");
+            System.out.println("✅ Demo user synchronized");
+        } catch (Exception ex) {
+            System.err.println("❌ Failed to initialize demo user: " + ex.getMessage());
         }
     }
 }
