@@ -11,30 +11,31 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "https://digital-banking-platform.onrender.com"
-        ));
+                String allowedOrigins = System.getenv("ALLOWED_ORIGINS");
+                if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
+                        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+                } else {
+                        config.setAllowedOrigins(List.of(
+                                        "http://localhost:3000",
+                                        "https://digital-banking-platform.onrender.com"));
+                }
 
-        config.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS"
-        ));
+                config.setAllowedMethods(List.of(
+                                "GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        config.setAllowedHeaders(List.of(
-                "Authorization",
-                "Content-Type"
-        ));
+                config.setAllowedHeaders(List.of(
+                                "Authorization",
+                                "Content-Type"));
 
-        config.setAllowCredentials(true);
+                config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", config);
 
-        return source;
-    }
+                return source;
+        }
 }
